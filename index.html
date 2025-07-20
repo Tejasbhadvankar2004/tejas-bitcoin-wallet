@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dual Demo Bitcoin Wallet</title>
+</head>
+<body style="background-color: black; color: white; font-family: Arial; padding: 30px; text-align: center;">
+
+  <!-- Login -->
+  <div id="loginSection">
+    <h1>🔐 Enter Password to Access Wallets</h1>
+    <input type="password" id="pagePassword" placeholder="Enter Access Password"><br><br>
+    <button onclick="
+      let inputPass = document.getElementById('pagePassword').value;
+      if (inputPass === '1234') {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('walletSection').style.display = 'flex';
+      } else {
+        alert('Incorrect password');
+      }
+    ">Enter</button>
+  </div>
+
+  <!-- Wallets Side-by-Side -->
+  <div id="walletSection" style="display: none; justify-content: space-around;">
+
+    <!-- Wallet A -->
+    <div style="border: 1px solid white; padding: 20px; width: 45%;">
+      <h2>🅰 Wallet A</h2>
+      <p id="addressA">Click to Create Wallet</p>
+      <button onclick="
+        walletA.address = 'BTC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        document.getElementById('addressA').innerText = walletA.address;
+      ">Create Wallet</button>
+
+      <h3>💰 Balance: <span id="balanceA">1.5000 BTC</span></h3>
+
+      <h3>🔒 Set PIN</h3>
+      <input type='password' id='pinA' placeholder='4-digit PIN'><br><br>
+      <button onclick="
+        let p = document.getElementById('pinA').value;
+        if (!/^[0-9]{4}$/.test(p)) { alert('Invalid PIN'); return; }
+        walletA.pin = p;
+        alert('PIN Set for Wallet A');
+        document.getElementById('pinA').value = '';
+      ">Set PIN</button>
+
+      <h3>📤 Send</h3>
+      <input type='text' id='toA' placeholder='To Address'><br><br>
+      <input type='number' id='amtA' placeholder='Amount'><br><br>
+      <input type='password' id='checkPinA' placeholder='Enter PIN'><br><br>
+      <button onclick="
+        sendFunds(walletA, 'amtA', 'toA', 'checkPinA', 'balanceA', 'historyA');
+      ">Send</button>
+
+      <h3>📥 Receive</h3>
+      <input type='number' id='rcvA' placeholder='Amount'><br><br>
+      <button onclick="
+        receiveFunds(walletA, 'rcvA', 'balanceA', 'historyA');
+      ">Receive</button>
+
+      <h3>📜 History</h3>
+      <ul id="historyA" style="list-style: none;"></ul>
+    </div>
+
+    <!-- Wallet B -->
+    <div style="border: 1px solid white; padding: 20px; width: 45%;">
+      <h2>🅱 Wallet B</h2>
+      <p id="addressB">Click to Create Wallet</p>
+      <button onclick="
+        walletB.address = 'BTC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        document.getElementById('addressB').innerText = walletB.address;
+      ">Create Wallet</button>
+
+      <h3>💰 Balance: <span id="balanceB">1.5000 BTC</span></h3>
+
+      <h3>🔒 Set PIN</h3>
+      <input type='password' id='pinB' placeholder='4-digit PIN'><br><br>
+      <button onclick="
+        let p = document.getElementById('pinB').value;
+        if (!/^[0-9]{4}$/.test(p)) { alert('Invalid PIN'); return; }
+        walletB.pin = p;
+        alert('PIN Set for Wallet B');
+        document.getElementById('pinB').value = '';
+      ">Set PIN</button>
+
+      <h3>📤 Send</h3>
+      <input type='text' id='toB' placeholder='To Address'><br><br>
+      <input type='number' id='amtB' placeholder='Amount'><br><br>
+      <input type='password' id='checkPinB' placeholder='Enter PIN'><br><br>
+      <button onclick="
+        sendFunds(walletB, 'amtB', 'toB', 'checkPinB', 'balanceB', 'historyB');
+      ">Send</button>
+
+      <h3>📥 Receive</h3>
+      <input type='number' id='rcvB' placeholder='Amount'><br><br>
+      <button onclick="
+        receiveFunds(walletB, 'rcvB', 'balanceB', 'historyB');
+      ">Receive</button>
+
+      <h3>📜 History</h3>
+      <ul id="historyB" style="list-style: none;"></ul>
+    </div>
+  </div>
+
+  <script>
+    let walletA = { address: '', balance: 1.5, pin: '', history: [] };
+    let walletB = { address: '', balance: 1.5, pin: '', history: [] };
+
+    function updateHistory(wallet, listId) {
+      let ul = document.getElementById(listId);
+      ul.innerHTML = '';
+      wallet.history.forEach(entry => {
+        let li = document.createElement('li');
+        li.innerText = entry;
+        ul.appendChild(li);
+      });
+    }
+
+    function receiveFunds(wallet, inputId, balId, histId) {
+      let amt = parseFloat(document.getElementById(inputId).value);
+      if (!wallet.address) return alert('Create wallet first!');
+      if (isNaN(amt) || amt <= 0) return alert('Invalid amount!');
+      wallet.balance += amt;
+      document.getElementById(balId).innerText = wallet.balance.toFixed(4) + ' BTC';
+      wallet.history.unshift('Received ' + amt.toFixed(4) + ' BTC');
+      updateHistory(wallet, histId);
+      document.getElementById(inputId).value = '';
+    }
+
+    function sendFunds(wallet, amtId, toId, pinId, balId, histId) {
+      let amt = parseFloat(document.getElementById(amtId).value);
+      let toAddr = document.getElementById(toId).value;
+      let pinEntered = document.getElementById(pinId).value;
+      if (!wallet.address) return alert('Create wallet first!');
+      if (!wallet.pin) return alert('Set your PIN!');
+      if (wallet.pin !== pinEntered) return alert('Incorrect PIN!');
+      if (!toAddr || isNaN(amt) || amt <= 0) return alert('Invalid input!');
+      if (wallet.balance < amt) return alert('Insufficient balance!');
+      wallet.balance -= amt;
+      document.getElementById(balId).innerText = wallet.balance.toFixed(4) + ' BTC';
+      wallet.history.unshift('Sent ' + amt.toFixed(4) + ' BTC to ' + toAddr);
+      updateHistory(wallet, histId);
+      document.getElementById(amtId).value = '';
+      document.getElementById(toId).value = '';
+      document.getElementById(pinId).value = '';
+      // Auto-Receive in other wallet if address matches
+      if (toAddr === walletA.address && wallet !== walletA) {
+        walletA.balance += amt;
+        document.getElementById('balanceA').innerText = walletA.balance.toFixed(4) + ' BTC';
+        walletA.history.unshift('Received ' + amt.toFixed(4) + ' BTC from ' + wallet.address);
+        updateHistory(walletA, 'historyA');
+      } else if (toAddr === walletB.address && wallet !== walletB) {
+        walletB.balance += amt;
+        document.getElementById('balanceB').innerText = walletB.balance.toFixed(4) + ' BTC';
+        walletB.history.unshift('Received ' + amt.toFixed(4) + ' BTC from ' + wallet.address);
+        updateHistory(walletB, 'historyB');
+      }
+    }
+  </script>
+
+</body>
+</html>
